@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Prediction</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 50px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+        }
+        .result {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎓 Student Pass Prediction</h1>
+
+    <input type="number" id="hours" placeholder="Hours Studied">
+    <input type="number" id="attendance" placeholder="Attendance %">
+    <br>
+    <button onclick="predict()">Predict</button>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        async function predict() {
+            const hours = document.getElementById("hours").value;
+            const attendance = document.getElementById("attendance").value;
+
+            const res = await fetch("http://13.201.120.105:5001/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    hours_studied: hours,
+                    attendance: attendance
+                })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("result").innerHTML =
+                `Prediction: ${data.prediction} <br> Probability: ${data.probability}`;
+        }
+    </script>
+
+</body>
+</html>

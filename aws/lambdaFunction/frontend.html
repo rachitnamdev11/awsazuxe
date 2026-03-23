@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fixed Lambda App</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 50px; background: #f4f7f6; }
+        .box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        #output { margin-top: 20px; color: #333; font-weight: bold; display: none; background: #eee; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>Lambda Status: <span id="status">Ready</span></h3>
+        <input type="text" id="nameBox" placeholder="Enter Name">
+        <button onclick="sendData()">Send to AWS</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        async function sendData() {
+            const name = document.getElementById('nameBox').value;
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            
+            // USE YOUR REAL URL HERE
+            const URL = 'https://9tr5y7c3tc.execute-api.ap-south-1.amazonaws.com/default/backend';
+
+            status.innerText = "Sending...";
+            
+            try {
+                const response = await fetch(URL, {
+                    method: 'POST',
+                    // Using text/plain is the 'Magic Trick' to bypass strict CORS Preflight
+                    headers: { 'Content-Type': 'text/plain' }, 
+                    body: JSON.stringify({ userName: name })
+                });
+
+                const data = await response.json();
+                output.style.display = 'block';
+                output.innerHTML = data.message + "<br>Number: " + data.luckyNumber;
+                status.innerText = "Success!";
+            } catch (e) {
+                console.error(e);
+                status.innerText = "Error - See Console";
+                alert("Check if your API is DEPLOYED in AWS Console.");
+            }
+        }
+    </script>
+</body>
+</html>

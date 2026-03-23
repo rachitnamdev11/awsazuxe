@@ -1,0 +1,115 @@
+# COMPLETE EC2 SETUP SCRIPT (FLASK + ML API)
+
+# PART 1: CONNECT (RUN FROM WINDOWS)
+cd %USERPROFILE%\Downloads
+ssh -i ml-demo.pem ubuntu@54.226.249.248
+
+# PART 2: EC2 INITIAL SETUP
+sudo apt update
+sudo apt install python3-pip python3-venv -y
+
+# PART 3: UPLOAD PROJECT (RUN LOCALLY IN NEW CMD)
+scp -i %USERPROFILE%\Downloads\ml-demo.pem -r C:\Users\rachitnamdev\Documents\LabProject\ml-api-project ubuntu@54.226.249.248:~
+OR
+git clone https://github.com/<your-username>/<your-repo-name>.git
+
+# PART 4: PROJECT SETUP
+
+cd ~/ml-api-project
+ls
+
+# PART 5: VIRTUAL ENV 
+
+python3 -m venv venv
+source venv/bin/activate
+
+# PART 6: INSTALL REQUIREMENTS
+
+pip install -r requirements.txt
+pip install gunicorn
+
+# PART 7: RUN ML API (TEST)
+
+gunicorn app:app -b 0.0.0.0:5001
+
+# Open in browser:
+
+# http://54.226.249.248:5001
+
+# PART 8: RUN IN BACKGROUND
+
+# Stop previous run first (CTRL + C)
+
+nohup gunicorn app:app -b 0.0.0.0:5001 &
+ps aux | grep gunicorn
+
+# PART 9: TEST API
+
+curl -X POST http://54.226.249.248:5001/predict 
+-H "Content-Type: application/json" 
+-d "{"hours_studied":5,"attendance":80}"
+
+
+# TODO APP SYSTEMD SETUP
+cd /home/ubuntu/todo
+
+sudo nano /etc/systemd/system/todo.service
+
+# ---- PASTE BELOW ----
+[Unit]
+Description=Flask Todo App
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/todo
+ExecStart=/home/ubuntu/todo/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+# ENABLE SERVICE 
+
+sudo systemctl daemon-reload
+sudo systemctl start todo
+sudo systemctl enable todo
+sudo systemctl status todo
+
+
+# USEFUL COMMANDS
+
+
+# Restart
+sudo systemctl restart todo
+
+# Stop
+sudo systemctl stop todo
+
+# Logs
+journalctl -u todo -f
+
+
+# URLS
+# Todo App:
+# http://3.87.95.116:5000
+# ML API:
+# http://54.226.249.248:5001
+
+
+[Unit]
+Description=Flask Todo App
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+# Changed from /home/ubuntu/todo to your actual folder
+WorkingDirectory=/home/ubuntu/ml-prediction-model
+# Ensure gunicorn is inside the venv in THIS folder
+ExecStart=/home/ubuntu/ml-prediction-model/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

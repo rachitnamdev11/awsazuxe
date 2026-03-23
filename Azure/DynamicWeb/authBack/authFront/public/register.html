@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+</head>
+<body>
+
+<h2>Register</h2>
+
+<form onsubmit="register(event)">
+  <input type="email" id="email" placeholder="Email" required><br><br>
+  <input type="password" id="password" placeholder="Password" required><br><br>
+  <button type="submit">Register</button>
+</form>
+
+<p id="msg"></p>
+
+<script>
+const API = "https://dynamic1977-eva5c4b4adaubsgg.centralindia-01.azurewebsites.net";
+
+async function register(e){
+  e.preventDefault();
+
+  const res = await fetch(API + "/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value
+    })
+  });
+
+  const data = await res.text();
+  document.getElementById("msg").innerText = data;
+}
+</script>
+
+</body>
+</html>

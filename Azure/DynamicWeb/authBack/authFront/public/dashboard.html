@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<p id="data"></p>
+
+<button onclick="logout()">Logout</button>
+
+<script>
+const API = "https://dynamic1977-eva5c4b4adaubsgg.centralindia-01.azurewebsites.net/";
+
+const token = localStorage.getItem("token");
+
+if(!token){
+  window.location.href = "login.html";
+}
+
+document.getElementById("data").innerText = "✅ Logged in successfully";
+
+function logout(){
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>

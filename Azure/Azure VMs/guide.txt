@@ -1,0 +1,121 @@
+# =========================================
+# CONNECT TO AZURE VM (WINDOWS)
+# =========================================
+
+# If using PowerShell (recommended)
+
+# If permission error occurs (rare), use:
+icacls "C:\Users\rachitnamdev\Downloads\attendence_key.pem" /inheritance:r
+icacls "C:\Users\rachitnamdev\Downloads\attendence_key.pem" /grant:r "%USERNAME%:R"
+ssh -i C:\Users\rachitnamdev\Downloads\attendence_key.pem azureuser@20.2.235.233
+
+# UPDATE SERVER (RUN INSIDE VM)
+sudo apt update && sudo apt upgrade -y
+
+
+# INSTALL REQUIRED PACKAGES
+sudo apt install python3-pip python3-venv git nginx -y
+
+
+# CLONE PROJECT FROM GITHUB
+git clone https://github.com/rachitnamdev11/todo.git
+cd todo
+
+
+# CREATE VIRTUAL ENVIRONMENT
+python3 -m venv venv
+
+# Activate (Linux VM command, still same)
+source venv/bin/activate
+
+
+# INSTALL DEPENDENCIES
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# If requirements.txt not present:
+pip install flask gunicorn
+
+
+# RUN APP (TEST)
+python3 app.py
+
+# Open in browser:
+# http://20.2.235.233:5000
+
+
+# ALLOW PORT 5000
+sudo ufw allow 5000
+
+
+# RUN WITH GUNICORN
+pip install gunicorn
+gunicorn --bind 0.0.0.0:8000 app:app
+
+# Test:
+# http://20.2.235.233:8000
+
+
+# CREATE NGINX CONFIG
+sudo nano /etc/nginx/sites-available/todo
+
+
+# PASTE:
+server {
+    listen 80;
+    server_name 20.2.235.233;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+
+# ENABLE NGINX CONFIG
+sudo ln -s /etc/nginx/sites-available/todo /etc/nginx/sites-enabled
+
+
+# RESTART NGINX
+sudo systemctl restart nginx
+
+
+# CREATE SYSTEMD SERVICE
+sudo nano /etc/systemd/system/todo.service
+
+
+# PASTE:
+[Unit]
+Description=Flask Todo App
+After=network.target
+
+[Service]
+User=azureuser
+WorkingDirectory=/home/azureuser/todo
+ExecStart=/home/azureuser/todo/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+
+[Install]
+WantedBy=multi-user.target
+
+
+# START Service
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl start todo
+sudo systemctl enable todo
+
+
+# CHECK STATUS
+sudo systemctl status todo
+sudo journalctl -u todo -f
+
+
+# FINAL TEST
+# http://20.2.235.233
+
+
+# UPDATE PROJECT
+cd ~/todo
+git pull
+sudo systemctl restart todo

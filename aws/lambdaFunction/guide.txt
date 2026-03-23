@@ -1,0 +1,120 @@
+AWS LAMBDA + API GATEWAY COMPLETE SETUP GUIDE
+
+---
+
+## STEP 1: CREATE LAMBDA FUNCTION
+
+1. Go to AWS Console
+2. Open Lambda service
+3. Click "Create function"
+
+Fill details:
+
+* Function name: hello
+* Runtime: Node.js 18.x
+* Architecture: default
+
+Click "Create function"
+
+---
+
+## STEP 2: ADD CODE
+
+Delete default code and paste:
+
+exports.handler = async (event) => {
+console.log("Lambda executed ✅");
+
+```
+return {
+    statusCode: 200,
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        message: "Hello from Lambda 🚀"
+    })
+};
+```
+
+};
+
+Click "Deploy"
+
+---
+
+## STEP 3: TEST LAMBDA
+
+1. Click "Test"
+2. Create new test event
+3. Click "Test"
+
+Expected output:
+{
+"statusCode": 200,
+"body": "{"message":"Hello from Lambda 🚀"}"
+}
+
+If this works → move ahead
+
+---
+
+## STEP 4: CREATE API GATEWAY
+
+1. Go to API Gateway
+2. Click "Create API"
+3. Select "HTTP API" (IMPORTANT)
+4. Click "Build"
+
+---
+
+## STEP 5: CONNECT LAMBDA
+
+1. Click "Add integration"
+2. Choose "Lambda"
+3. Select function: hello
+4. Click "Add"
+
+---
+
+## STEP 6: CREATE ROUTE
+
+1. Click "Add route"
+2. Method: GET
+3. Path: /hello
+4. Attach to Lambda
+
+---
+
+## STEP 7: DEPLOY API
+
+1. Click "Deploy"
+2. Copy the Invoke URL
+
+Example:
+https://abc123.execute-api.ap-south-1.amazonaws.com
+
+---
+
+## STEP 8: TEST FINAL API
+
+Open in browser:
+
+https://abc123.execute-api.ap-south-1.amazonaws.com/hello
+
+Expected output:
+{
+"message": "Hello from Lambda 🚀"
+}
+
+---
+
+## IMPORTANT NOTES
+
+* Always use Node.js 18.x
+* Handler must be: index.handler
+* Use only index.js (NO index.mjs)
+* Always click Deploy after changes
+* Use HTTP API (simpler than REST API)
+
+---

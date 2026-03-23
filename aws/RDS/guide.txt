@@ -1,0 +1,43 @@
+Go to 👉 Amazon RDS
+Do this:
+Click Create database
+Choose:
+Engine → MySQL
+Select:
+Version → latest
+Templates → Free tier
+
+
+
+DB instance ID → database-1
+Username → admin
+Password → (your password)
+
+
+
+Public access → YES
+VPC → default
+Security group → default (ok)
+
+
+
+Click your DB
+Go to Connectivity & security
+Copy:
+Endpoint: database-1.xxxxxx.ap-south-1.rds.amazonaws.com
+Port: 3306
+
+
+Steps:
+Open Security Groups
+Click:
+sg-0fe7c4a854e41bb77
+
+
+Click Edit inbound rules → Add rule
+Field	Value
+Type	MySQL/Aurora
+Port	3306
+Source	0.0.0.0/0
+
+mysql -h Copied_Endpoint -u admin -p

@@ -1,0 +1,64 @@
+Search SQL DATABASE
+Create
+
+Select Resource Group 
+
+
+Create Server
+Enter Server_name
+Location : same as resource Group
+Use Microsoft Entra-only authentication
+OK
+
+sql elastic pool :- NO
+workLoad Environment :- Development
+
+Compute + Storage :- 
+service Tier :- General Purpose
+Computer Tier :- Serverless
+Apply
+
+Backup storage Redundancy :- Locally-redundant backup storage
+
+next : Networking
+Add current client IP address : YES
+MINIMUM TLA Version : TLS 1.2
+
+Review AND Create 
+create
+wait for deploy
+
+GO TO RESOURCE 
+
+QUERY EDITOR 
+Microsoft entra authentication
+connect as ______________
+
+--------------------------------------------------
+new QUERY
+
+CREATE TABLE predictions (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    input_data VARCHAR(MAX),
+    prediction FLOAT,
+    created_at DATETIME DEFAULT GETDATE()
+);
+
+INSERT INTO predictions (input_data, prediction)
+VALUES ('test', 0.95);
+
+SELECT * FROM predictions;
+
+Connect SQL Azure using python
+--------------------------------------------------
+import pyodbc
+
+conn = pyodbc.connect(
+    'DRIVER={ODBC Driver 17 for SQL Server};'
+    'SERVER=rachit-ml-server.database.windows.net;'
+    'DATABASE=ml_db;'
+    'UID=rachit;'
+    'PWD=yourpassword'
+)
+
+cursor = conn.cursor()

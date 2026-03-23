@@ -1,0 +1,24 @@
+// Create Bucket 
+Click Create bucket
+Enter name:
+Create folder → students/
+Upload data.csv inside it
+
+// Link bucket to the ahtena
+QUERY SETTING -> QUERY RESULT ENCRYPTION(MANAGE) -> BROWSE S# SELECT students folder
+
+CREATE DATABASE database_name;
+
+
+// Create table using s3 bucket
+CREATE EXTERNAL TABLE students (
+    id INT,
+    name STRING,
+    age INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION 's3://your-bucket-name/students/';
+
+
+NOW YOU CAN RUN ANY QUERY 
