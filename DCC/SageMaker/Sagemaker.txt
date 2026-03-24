@@ -1,0 +1,274 @@
+1. Using SageMaker to Deploy a Machine Learning Model
+Step 1: Prepare Dataset
+We used the Iris dataset.
+
+Dataset link example:
+
+ 
+https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv
+ 
+The dataset was uploaded to Amazon S3.
+
+Example S3 path:
+
+ 
+s3://parth-ml-model/iris.csv
+ 
+Step 2: Train the Model in SageMaker Notebook
+We opened SageMaker Studio → Jupyter Notebook and trained a model.
+
+Example code:
+
+ 
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+data = pd.read_csv("iris.csv")
+
+X = data.drop("species", axis=1)
+y = data["species"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+X, y, test_size=0.2, random_state=42
+)
+
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+ 
+Step 3: Save the Model
+ 
+import joblib
+
+joblib.dump(model, "model.joblib")
+ 
+Step 4: Package the Model for SageMaker
+SageMaker expects the model artifact as tar.gz.
+
+Folder structure:
+
+ 
+model/
+model.joblib
+ 
+Create archive:
+
+ 
+import tarfile
+
+with tarfile.open("model.tar.gz", "w:gz") as tar:
+tar.add("model", arcname=".")
+ 
+Step 5: Upload Model to S3
+ 
+import boto3
+
+s3 = boto3.client("s3")
+
+s3.upload_file("model.tar.gz", "parth-ml-model", "model/model.tar.gz")
+ 
+S3 path becomes:
+
+ 
+s3://parth-ml-model/model/model.tar.gz
+ 
+Step 6: Create Inference Script
+SageMaker needs an inference.py file.
+
+Example:
+
+ 
+import joblib
+import json
+import numpy as np
+
+def model_fn(model_dir):
+model = joblib.load(f"{model_dir}/model.joblib")
+return model
+
+def input_fn(request_body, request_content_type):
+data = json.loads(request_body)
+return np.array(data)
+
+def predict_fn(input_data, model):
+prediction = model.predict(input_data)
+return prediction.tolist()
+
+def output_fn(prediction, content_type):
+return json.dumps(prediction)
+ 
+Step 7: Deploy the Model
+ 
+from sagemaker.sklearn.model import SKLearnModel
+import sagemaker
+
+role = sagemaker.get_execution_role()
+
+model = SKLearnModel(
+model_data="s3://parth-ml-model/model/model.tar.gz",
+role=role,
+entry_point="inference.py",
+framework_version="1.0-1"
+)
+
+predictor = model.deploy(
+instance_type="ml.t2.medium",
+initial_instance_count=1
+)
+ 
+SageMaker creates an endpoint where the model is hosted.
+
+Example endpoint name:
+
+ 
+sagemaker-scikit-learn-2026-03-16-09-12
+ 
+2. Using Lambda Functions and Integration
+Purpose of Lambda
+A Lambda function acts as the backend layer between the API and the SageMaker endpoint.
+
+It receives requests and forwards them to SageMaker.
+
+Step 1: Create Lambda Function
+In AWS Console:
+
+ 
+Lambda → Create Function
+ 
+Configuration:
+
+ 
+Name: sagemaker-predict-api
+Runtime: Python
+ 
+Step 2: Attach Permissions
+The Lambda role must have permission to call SageMaker.
+
+Policy required:
+
+ 
+AmazonSageMakerFullAccess
+ 
+or
+
+ 
+sagemaker:InvokeEndpoint
+ 
+Step 3: Lambda Code
+Example Lambda code:
+
+ 
+import json
+import boto3
+
+runtime = boto3.client("sagemaker-runtime")
+
+ENDPOINT_NAME = "your-endpoint-name"
+
+def lambda_handler(event, context):
+
+body = json.loads(event["body"])
+
+response = runtime.invoke_endpoint(
+EndpointName=ENDPOINT_NAME,
+ContentType="application/json",
+Body=json.dumps(body)
+)
+
+result = response["Body"].read().decode()
+
+return {
+"statusCode": 200,
+"body": result
+}
+ 
+Lambda Workflow
+ 
+Client request
+↓
+Lambda receives request
+↓
+Lambda calls SageMaker endpoint
+↓
+Model prediction returned
+ 
+3. Creating Endpoint URL using HTTP API
+To make the model publicly accessible, we used HTTP API in API Gateway.
+
+Step 1: Create HTTP API
+Go to:
+
+ 
+API Gateway → Create API → HTTP API
+ 
+Step 2: Add Integration
+Integration type:
+
+ 
+Lambda
+ 
+Select:
+
+ 
+sagemaker-predict-api
+ 
+Step 3: Configure Route
+Route configuration:
+
+ 
+Method: POST
+Resource path: /predict
+ 
+Example:
+
+ 
+POST /predict
+ 
+Step 4: Create Stage
+Stage name:
+
+ 
+prod
+ 
+Deploy the API.
+
+Step 5: Get Invoke URL
+Example:
+
+ 
+https://sgd0o8sve0.execute-api.ap-south-1.amazonaws.com/prod
+ 
+Final endpoint:
+
+ 
+https://sgd0o8sve0.execute-api.ap-south-1.amazonaws.com/prod/predict
+ 
+Testing the API
+Using Python
+ 
+import requests
+
+url = "https://sgd0o8sve0.execute-api.ap-south-1.amazonaws.com/prod/predict"
+
+data = [[5.1,3.5,1.4,0.2]]
+
+response = requests.post(url, json=data)
+
+print(response.text)
+ 
+Expected output:
+
+ 
+["setosa"]
+ 
+Final Deployment Pipeline
+ 
+User / Application
+↓
+API Gateway HTTP API
+↓
+Lambda Function
+↓
+SageMaker Endpoint
+↓
+Machine Learning Model

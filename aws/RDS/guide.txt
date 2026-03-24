@@ -41,3 +41,17 @@ Port	3306
 Source	0.0.0.0/0
 
 mysql -h Copied_Endpoint -u admin -p
+
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadOnly",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::your-bucket-name/*"
+    }
+  ]
+}
